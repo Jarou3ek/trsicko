@@ -4,8 +4,7 @@ Cloudflare deploys the committed public directory using the dependency-free Node
 from pathlib import Path
 from PIL import Image
 from html import escape
-from zipfile import ZipFile
-import xml.etree.ElementTree as ET
+from pypdf import PdfReader
 import shutil
 import json
 
@@ -24,8 +23,9 @@ def optimize(source, name, width):
 optimize(SOURCE / 'Logo.png', 'logo.webp', 700)
 optimize(SOURCE / 'Pozvánka.png', 'pozvanka.webp', 1200)
 optimize(SOURCE / 'Úvodní slovo.png', 'uvodni-slovo.webp', 1400)
-shutil.copy2(SOURCE / 'Tršicko_program_A2.pdf', ASSETS / 'program-2026-2030.pdf')
-shutil.copy2(SOURCE / 'Plakat_hlavy-1.pdf', ASSETS / 'kandidatka.pdf')
+shutil.copy2(SOURCE / 'program.jpg', ASSETS / 'program.jpg')
+shutil.copy2(SOURCE / 'podrobný program rozvoje obcí.pdf', ASSETS / 'podrobny-program.pdf')
+shutil.copy2(SOURCE / 'kandidati.jpeg', ASSETS / 'kandidati.jpeg')
 
 program = [
 ('Správa obcí a transparentnost', [
@@ -101,25 +101,36 @@ body = '''<main id="obsah">
 <section class="hero"><div class="wrap hero-grid"><div><p class="eyebrow">Komunální volby 2026</p><p class="ballot-number"><span>Volební číslo</span><strong>2</strong></p><h1>TRŠICKO<span>obce pro život.</span></h1><p class="lead">Program pro obec Tršice a její místní části.<br>Období 2026–2030.</p><div class="actions"><a class="button" href="#program">Volební program <span aria-hidden="true">↗</span></a><a class="button secondary" href="#kandidati">Kandidátka <span aria-hidden="true">↓</span></a></div></div><div class="hero-mark"><img src="assets/logo.webp" alt="Tršicko – obce pro život. Společně tvoříme naše obce lepší." width="700" height="700" fetchpriority="high"><div class="hero-caption"><strong>Tršicko – obce pro život</strong><span>2026–2030</span></div></div></div></section>
 <section class="village-gallery" aria-label="Tršice a místní části"><div class="wrap village-grid"><figure class="village-card"><img src="assets/obec-trsice.webp" alt="Kostel v Tršicích" width="900" height="797" loading="lazy"><figcaption>Tršice</figcaption></figure><figure class="village-card"><img src="assets/obec-lipnany.webp" alt="Kaple v Lipňanech" width="820" height="1000" loading="lazy"><figcaption>Lipňany</figcaption></figure><figure class="village-card"><img src="assets/obec-zakrov.webp" alt="Zvonička v Zákřově" width="507" height="707" loading="lazy"><figcaption>Zákřov</figcaption></figure><figure class="village-card"><img src="assets/obec-vacanovice.webp" alt="Kaple ve Vacanovicích" width="606" height="827" loading="lazy"><figcaption>Vacanovice</figcaption></figure><figure class="village-card"><img src="assets/obec-prestavlky.webp" alt="Kaple a památník v Přestavlkách" width="900" height="756" loading="lazy"><figcaption>Přestavlky</figcaption></figure><figure class="village-card"><img src="assets/obec-hostkovice.webp" alt="Kaple v Hostkovicích" width="620" height="827" loading="lazy"><figcaption>Hostkovice</figcaption></figure></div></section>
 <section class="section" id="o-nas"><div class="wrap intro-grid"><div><p class="eyebrow">O sdružení</p><h2>Úvodní slovo</h2></div><div class="intro-copy"><p><strong>Milí sousedé,</strong></p><p>rádi bychom vám představili nové sdružení Tršicko – obce pro život a našich jedenáct kandidátů pro nadcházející volby do zastupitelstva obce.</p><details><summary>Přečíst celé úvodní slovo</summary><p>Spojuje nás jednoduchá myšlenka: chceme obce, ve kterých se dá dobře, bezpečně a aktivně žít. Obce, kde se lidé znají, vzájemně si pomáhají a kde má každý prostor podílet se na jejich budoucnosti.</p><p>Nechceme dělat politiku. Chceme poctivě pracovat pro blaho našich obcí, naslouchat vašim podnětům a hledat řešení, která budou dávat smysl dnes i v dalších letech.</p><p>Jsme připraveni spolupracovat s dalšími kandidáty z ostatních sdružení i s vámi, našimi sousedy. Věříme, že dobré věci vznikají tehdy, když se dokážeme domluvit, respektovat se a spojit síly pro společný cíl.</p><p>Každý z našich kandidátů přináší zkušenosti ze svého zaměstnání, spolků i každodenního života v našich obcích. Aktivně se podílíme na jejich činnosti a chceme své schopnosti a energii využít také ve prospěch celé obce.</p><p>Společně se chceme podílet na dalším zlepšování kvality života ve všech našich obcích – v Tršicích, Lipňanech, Zákřově, Vacanovicích, Přestavlkách i Hostkovicích. Záleží nám na bezpečném prostředí, péči o veřejný prostor, rozumném rozvoji i zachování místních tradic.</p><p>Budeme rádi za vaši důvěru a váš hlas v nadcházejících komunálních volbách.</p><p><strong>Jsme tu pro vás.<br>TRŠICKO-obce pro život<br>Společně tvoříme naše obce lepší.</strong></p><a class="text-link" href="assets/uvodni-slovo.webp">Původní úvodní slovo ↗</a></details></div></div></section>
-<section class="section pale" id="program"><div class="wrap"><div class="section-head"><div><p class="eyebrow">Program 2026–2030</p><h2>Volební program</h2></div><p>Program pro obec Tršice a její místní části.</p></div><div class="program-grid">''' + program_html + '''</div><div class="program-bottom"><a class="button" href="program.html">Podrobný program <span aria-hidden="true">↗</span></a><a class="text-link" href="assets/program-2026-2030.pdf">Program ke stažení v PDF ↓</a></div></div></section>
+<section class="section pale" id="program"><div class="wrap"><div class="section-head"><div><p class="eyebrow">Program 2026–2030</p><h2>Volební program</h2></div><p>Program pro obec Tršice a její místní části.</p></div><div class="program-grid">''' + program_html + '''</div><div class="program-bottom"><a class="button" href="program.html">Podrobný program <span aria-hidden="true">↗</span></a><a class="text-link" href="assets/program.jpg">Program ke stažení v JPG ↓</a></div></div></section>
 <section class="section" id="kandidati"><div class="wrap"><div class="section-head"><div><p class="eyebrow">Kandidátka 2026</p><h2>Kandidáti sdružení</h2></div><p>Volební číslo sdružení: <strong>2</strong>.<br>Jedenáct kandidátů do zastupitelstva obce.</p></div><div class="candidates">''' + ''.join(cards) + '''</div></div></section>
 <section class="section event-section" id="setkani"><div class="wrap"><div class="event"><div><p class="eyebrow">Setkání s občany</p><h2>Pozvánka na<br>přátelské setkání</h2><p>Setkání sdružení Tršicko – obce pro život se všemi kandidáty, představením programu a vizualizací podoby některých částí obcí.</p><p>Host setkání: <strong>Ing. Jan Koudelka</strong>, projektový ředitel společnosti Reticulum.</p><div class="actions"><a class="button" href="assets/pozvanka.webp">Zobrazit pozvánku <span aria-hidden="true">↗</span></a></div></div><div class="event-info"><time class="event-date" datetime="2026-10-04T15:00:00+02:00">4. října 2026</time><dl><dt>Den</dt><dd>Neděle</dd><dt>Začátek</dt><dd>15:00</dd><dt>Místo</dt><dd>Společenský sál<br>v Tršicích</dd></dl></div></div></div></section>
-<section class="section pale" id="dokumenty"><div class="wrap"><div class="section-head"><div><p class="eyebrow">Ke stažení</p><h2>Dokumenty</h2></div></div><div class="downloads"><a class="download" href="assets/program-2026-2030.pdf"><div><strong>Volební program</strong><small>PDF · 7,7 MB</small></div><span class="arrow" aria-hidden="true">↓</span></a><a class="download" href="assets/kandidatka.pdf"><div><strong>Kandidátka</strong><small>PDF · 5,4 MB</small></div><span class="arrow" aria-hidden="true">↓</span></a><a class="download" href="assets/pozvanka.webp"><div><strong>Pozvánka na setkání</strong><small>Obrázek · 4. října 2026</small></div><span class="arrow" aria-hidden="true">↗</span></a></div></div></section></main>'''
+<section class="section pale" id="dokumenty"><div class="wrap"><div class="section-head"><div><p class="eyebrow">Ke stažení</p><h2>Dokumenty</h2></div></div><div class="downloads"><a class="download" href="assets/podrobny-program.pdf"><div><strong>Podrobný program rozvoje obcí</strong><small>PDF · 185 kB</small></div><span class="arrow" aria-hidden="true">↓</span></a><a class="download" href="assets/program.jpg"><div><strong>Volební program</strong><small>JPG · 1,3 MB</small></div><span class="arrow" aria-hidden="true">↓</span></a><a class="download" href="assets/kandidati.jpeg"><div><strong>Kandidátka</strong><small>JPEG · 159 kB</small></div><span class="arrow" aria-hidden="true">↓</span></a><a class="download" href="assets/pozvanka.webp"><div><strong>Pozvánka na setkání</strong><small>Obrázek · 4. října 2026</small></div><span class="arrow" aria-hidden="true">↗</span></a></div></div></section></main>'''
 (PUBLIC / 'index.html').write_text(page('Tršicko – obce pro život | Volby 2026', 'Sdružení Tršicko – obce pro život. Kandidátka, program 2026–2030 a setkání s občany v Tršicích.', body), encoding='utf-8')
 
-ns = {'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'}
-docx = next(SOURCE.glob('*.docx'))
-with ZipFile(docx) as archive:
-    xml = ET.fromstring(archive.read('word/document.xml'))
-paragraphs = [''.join(t.text or '' for t in p.findall('.//w:t', ns)).strip() for p in xml.findall('.//w:p', ns)]
+reader = PdfReader(SOURCE / 'podrobný program rozvoje obcí.pdf')
 headings = {'Plánování', 'Budovy a pozemky', 'Výsadba a údržba veřejného prostranství', 'Zdroje vody', 'Komunikace občan a úřad', 'Odpady a bioodpady', 'Spolky', 'JPO obce Tršice', 'Priority našeho sdružení pro období 2026–2030', 'Základní a mateřská škola Tršice a SVP Tršice', 'Rozvoj a podpora zaměstnanců naší obce', 'Finance', 'Sportoviště a dětská hřiště', 'Služby'}
 content = []
-for p in paragraphs:
-    if not p or p in {'PROGRAM NAŠEHO SDRUŽENÍ', '2026–2030'}:
-        continue
-    tag = 'h2' if p in headings else 'p'
-    content.append(f'<{tag} class="source-paragraph">{escape(p)}</{tag}>')
-full_program = '''<main id="obsah" class="article"><a class="back" href="index.html#program">← Zpět na přehled programu</a><p class="eyebrow">Období 2026–2030</p><h1>Program našeho sdružení</h1><p class="source-note">Podrobný program sdružení Tršicko – obce pro život. <a href="assets/program-2026-2030.pdf">Stručný program v PDF ↓</a></p>''' + ''.join(content) + '</main>'
-(PUBLIC / 'program.html').write_text(page('Podrobný program 2026–2030 | Tršicko', 'Podrobný program sdružení Tršicko – obce pro život pro období 2026–2030.', full_program), encoding='utf-8')
+buffer = []
+def flush():
+    if buffer:
+        content.append('<p class="source-paragraph">' + escape(' '.join(buffer)) + '</p>')
+        buffer.clear()
+for pdf_page in reader.pages:
+    for raw_line in pdf_page.extract_text().splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith('TRŠICKO – obce pro život  |') or line in {'PROGRAM NAŠEHO SDRUŽENÍ', '2026–2030'}:
+            continue
+        if line in headings:
+            flush()
+            content.append('<h2>' + escape(line) + '</h2>')
+            continue
+        if line.startswith('•'):
+            flush()
+        buffer.append(line)
+        if line.endswith(('.', ':', '!', '?')):
+            flush()
+flush()
+full_program = '<main id="obsah" class="article"><a class="back" href="index.html#program">← Zpět na přehled programu</a><p class="eyebrow">Období 2026–2030</p><h1>Podrobný program rozvoje obcí</h1><p class="source-note"><a href="assets/podrobny-program.pdf">Stáhnout podrobný program v PDF ↓</a> · <a href="assets/program.jpg">Stručný program v JPG ↓</a></p>' + ''.join(content) + '</main>'
+(PUBLIC / 'program.html').write_text(page('Podrobný program rozvoje obcí | Tršicko', 'Podrobný program rozvoje obcí sdružení Tršicko – obce pro život pro období 2026–2030.', full_program), encoding='utf-8')
 (PUBLIC / '404.html').write_text(page('Stránka nenalezena | Tršicko', 'Požadovanou stránku se nepodařilo najít.', '<main id="obsah" class="article"><p class="eyebrow">Chyba 404</p><h1>Stránka nenalezena</h1><p>Tato adresa na webu není dostupná.</p><a class="button" href="index.html">Přejít na úvodní stránku</a></main>'), encoding='utf-8')
 print(f'Generated home, program and {len(names)} candidate pages. Source paragraphs: {len(content)}.')
